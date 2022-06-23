@@ -1,0 +1,87 @@
+package sbnz.integracija;
+
+import sbnz.integracija.example.facts.Item;
+import sbnz.integracija.example.facts.User;
+import sbnz.integracija.example.facts.UserCategory;
+
+import sbnz.integracija.example.model.Order;
+
+
+rule "Categorize User - Bronze"
+    when
+	    $u: User(points > 1000, points < 2000, category == UserCategory.NA)
+    then
+    	System.out.println("User bronze categorization rule");
+    	System.out.println("Username:"+ $u.getUsername());
+    	$u.setCategory(UserCategory.BRONZE);
+        update($u);
+end
+
+rule "Categorize User - Silver"
+    when
+	     $u: User(points > 2000, points < 5000, category == UserCategory.BRONZE)
+    then
+    	System.out.println("User silver categorization rule");
+    	System.out.println("Username:"+ $u.getUsername());
+    	$u.setCategory(UserCategory.SILVER);
+        update($u);
+end
+
+rule "Categorize Customer - Gold"
+    when
+	     $u: User(points > 5000, category == UserCategory.SILVER)
+    then
+    	System.out.println("User gold categorization rule");
+    	System.out.println("Username:"+ $u.getUsername());
+    	$u.setCategory(UserCategory.GOLD);
+        update($u);
+end
+
+rule "Give extra 1% discount for orders larger than 2 books"
+    lock-on-active true
+    when $o: Order(totalItems > 2,totalItems <= 5)
+    then
+    	System.out.println("Give extra 1% discount for orders larger than 2 books rule");
+    	modify ($o) { increaseDiscount(1.0); }
+end
+
+rule "Give extra 2% discount for orders larger than 5 books"
+    lock-on-active true
+    when $o: Order(totalItems > 5)
+    then
+    	System.out.println("Give extra 2% discount for orders larger than 5 books rule"); 
+    	modify ($o) { increaseDiscount(2.0); }
+end
+
+rule "Give 1% discount for bronze users"
+    lock-on-active true
+    when $o: Order( user.category == UserCategory.BRONZE)
+    then 
+    	System.out.println("Give 1% discount for bronze users rule"); 
+    	modify ($o) { increaseDiscount(1.0); }
+end
+
+rule "Give 2% discount for silver users"
+    lock-on-active true
+    when $o: Order( user.category == UserCategory.SILVER)
+    then 
+    	System.out.println("Give 2% discount for silver users rule"); 
+    	modify ($o) { increaseDiscount(2.0); }
+end
+
+rule "Give 3% discount for gold users"
+    lock-on-active true
+    when $o: Order( user.category == UserCategory.GOLD)
+    then
+    	System.out.println("Give 3% discount for gold users rule"); 
+    	modify ($o) { increaseDiscount(3.0); }
+end
+
+
+rule "Charge for non members delivery"
+    lock-on-active true
+    when $o: Order(user.member == false)
+    then
+    	System.out.println("Charge for non members delivery");  
+    	modify ($o) { setDelivery(400.0); }
+end

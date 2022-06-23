@@ -1,0 +1,103 @@
+package sbnz.integracija;
+
+import sbnz.integracija.example.facts.Item;
+import sbnz.integracija.example.facts.User;
+import sbnz.integracija.example.facts.UserCategory;
+
+
+import sbnz.integracija.example.event.SuspiciousCustomerEvent;
+import sbnz.integracija.example.event.CancelOrderEvent;
+import sbnz.integracija.example.event.CommentApprovalEvent;
+import sbnz.integracija.example.event.BookMarkedEvent;
+import sbnz.integracija.example.event.ShareBookInfoEvent;
+import sbnz.integracija.example.event.OrderCreatedEvent;
+import sbnz.integracija.example.model.CommentStatus;
+import sbnz.integracija.example.model.Order;
+import sbnz.integracija.example.model.CommentStatus;
+
+
+rule "More than 2 canceled order in an week from one customer"
+	salience 9
+    when
+    	
+        $t1: CancelOrderEvent($cId: customerId)
+        $u: User(getCustomerId() == $cId)
+        Number(intValue > 1) from accumulate(
+            $t2: CancelOrderEvent(
+                this != $t1, 
+                customerId == $cId, 
+                this meets[7d] $t1
+            ),
+            count($t2)
+        )
+        not (SuspiciousCustomerEvent(customerId == $cId, reason == "Many canceled orders in week"))
+    then
+    	System.out.println("RULE: More than 2 canceled order in an week from one customer");
+    	System.out.println("Username:"+ $u.getUsername());
+   		modify($u) { removePoints(10) }
+        insert(new SuspiciousCustomerEvent($cId, "Many canceled orders in week"));
+end
+
+
+rule "More than 4 canceled order in an month from one customer"
+	salience 10
+    when
+        $t1: CancelOrderEvent($cId: customerId)
+        $u: User(getCustomerId() == $cId)
+        Number(intValue > 4) from accumulate(
+            $t2: CancelOrderEvent(
+                this != $t1, 
+                customerId == $cId, 
+                this meets[30d] $t1
+            ),
+            count($t2)
+        )
+        not (SuspiciousCustomerEvent(customerId == $cId, reason == "Many canceled orders in month"))
+    then
+    	System.out.println("RULE: More than 4 canceled order in an month from one customer");
+    	System.out.println("Username:"+ $u.getUsername());
+    	modify($u) { removePoints(10) }
+        insert(new SuspiciousCustomerEvent($cId, "Many canceled orders in month"));
+end
+
+
+rule "More than 2 rejected comments in an week from one customer"
+    when
+        $ca1: CommentApprovalEvent($cId: customerId, status == CommentStatus.REJECTED)
+        $u: User(getCustomerId() == $cId)
+        Number(intValue > 1) from accumulate(
+            $ca2: CommentApprovalEvent(
+                this != $ca1, 
+                customerId == $cId,
+                this meets[7d] $ca1
+            ),
+            count($ca2)
+        )
+        not (SuspiciousCustomerEvent(customerId == $cId, reason == "Many rejected comments"))
+    then
+    	System.out.println("RULE: More than 2 rejected comments in an week from one customer");
+    	System.out.println("Username:"+ $u.getUsername());
+    	modify($u) { removePoints(10) }
+        insert(new SuspiciousCustomerEvent($cId, "Many rejected comments"));
+end
+
+rule "More than 4 rejected comments in an month from one customer"
+    when
+        $ca1: CommentApprovalEvent($cId: customerId, status == CommentStatus.REJECTED)
+        $u: User(getCustomerId() == $cId)
+        Number(intValue > 1) from accumulate(
+            $ca2: CommentApprovalEvent(
+                this != $ca1, 
+                customerId == $cId,
+                this meets[30d] $ca1
+            ),
+            count($ca2)
+        )
+        not (SuspiciousCustomerEvent(customerId == $cId, reason == "Many rejected comments"))
+    then
+    	System.out.println("RULE: More than 4 rejected comments in an month from one customer");
+    	System.out.println("Username:"+ $u.getUsername());
+    	modify($u) { removePoints(10) }
+        insert(new SuspiciousCustomerEvent($cId, "Many rejected comments"));
+end
+

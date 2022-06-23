@@ -1,0 +1,121 @@
+package sbnz.integracija;
+
+import sbnz.integracija.example.facts.Item;
+import sbnz.integracija.example.facts.User;
+import sbnz.integracija.example.facts.UserCategory;
+import java.time.LocalDate;
+import java.util.List;
+import sbnz.integracija.example.event.SuspiciousCustomerEvent;
+import sbnz.integracija.example.event.CancelOrderEvent;
+import sbnz.integracija.example.event.CommentApprovalEvent;
+import sbnz.integracija.example.event.BookMarkedEvent;
+import sbnz.integracija.example.event.ShareBookInfoEvent;
+import sbnz.integracija.example.event.OrderCreatedEvent;
+import sbnz.integracija.example.model.CommentStatus;
+import sbnz.integracija.example.model.Order;
+import sbnz.integracija.example.model.Book;
+import sbnz.integracija.example.model.CommentStatus;
+
+rule "Book is marked"
+    no-loop
+    when
+        $book: Book($id: bookId) 
+        $e: BookMarkedEvent($book.bookId == bookId, $newMark: mark)
+    then
+    	System.out.println("RULE: Book is marked");
+    	System.out.println("mark" + $newMark);
+        modify ($book) { addMark($newMark) };
+end
+
+rule "User ordered books"
+    no-loop
+    when
+        $user: User($id: userId) 
+        $e: OrderCreatedEvent($user.userId == customerId, seen == 0)
+    then
+    	System.out.println("RULE: User ordered books");
+        modify ($user) { addPoints(10) };
+        modify ($e) { setSeen(1) };
+end
+
+rule "User canceled order"
+    no-loop
+    when
+        $user: User($id: userId) 
+        $e: CancelOrderEvent($user.userId == customerId, seen == 0)
+    then
+    	System.out.println("RULE: User canceled order");
+        modify ($user) { removePoints(10) };
+        modify ($e) { setSeen(1) };
+end
+
+rule "Comment approved"
+    no-loop
+    when
+        $user: User($id: userId) 
+        $e: CommentApprovalEvent($user.userId == customerId, status==CommentStatus.APPROVED, seen== 0)
+    then
+    	System.out.println("RULE: Comment approved");
+        modify ($user) { addPoints(10) };
+        modify ($e) { setSeen(1) };
+end
+
+
+
+
+rule "Award points to user, for past 6 months"
+	no-loop
+    when
+        $user: User($cuid: userId, add == 0)
+         accumulate(
+         	OrderCreatedEvent($o: this, $cuid == customerId,$date: orderDate, $date.isAfter(LocalDate.now().minusMonths(6))) and
+         	CommentApprovalEvent($cae: this,customerId == $cuid, $date2: date, $date2.isAfter(LocalDate.now().minusMonths(6)), status==CommentStatus.APPROVED),
+         	$createdOrders: collectList($o),
+         	$commapp: collectSet($cae)
+         )
+         eval($commapp.size() >= 6)
+         eval($createdOrders.size() >= 6)
+    then
+    	System.out.println("RULE: Award points to user, for past 6 months");
+        modify($user) { setAdd(50) }
+
+end
+
+rule "Remove points from user for past 6 months"
+	no-loop
+    when
+    
+    	$currentUser: User($cuid: username, $cage: age, $cgender: gender, remove==0)
+
+        
+        accumulate(
+         	CancelOrderEvent($o: this, $currentUser.userId == customerId,$date: date, $date.isAfter(LocalDate.now().minusMonths(6))) and
+         	CommentApprovalEvent($cae: this,customerId == $cuid, $date2: date, $date2.isAfter(LocalDate.now().minusMonths(6)), status==CommentStatus.REJECTED),
+         	$createdOrders: collectList($o),
+         	$commapp: collectList($cae)
+         )
+         eval($commapp.size() >= 6)
+         eval($createdOrders.size() >= 6)
+    then
+    	System.out.println("RULE: Remove points from user for past 6 months");
+    	modify($currentUser) { setRemove(100) }
+end
+
+
+rule "Award points to user, for past sharing books and marking them"
+	no-loop
+    when
+        $user: User($cuid: userId, shared==0)
+        accumulate(
+         	ShareBookInfoEvent($s: this, $user.userId == customerId,$date: date, $date.isAfter(LocalDate.now().minusMonths(3))) and
+         	BookMarkedEvent($m: this, $user.userId == userId,$date2: date, $date2.isAfter(LocalDate.now().minusMonths(3)),mark >2),
+         	$sharedBooks: collectList($s),
+         	$bmel: collectList($m)
+         )
+         eval($bmel.size() >= 6)
+         eval($sharedBooks.size() >= 6)
+    then
+    	System.out.println("RULE: Award points to user, for past sharing books and marking them");
+        modify($user) { addShared(50) }
+
+end
