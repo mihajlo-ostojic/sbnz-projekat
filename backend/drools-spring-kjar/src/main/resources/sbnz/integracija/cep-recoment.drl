@@ -127,7 +127,7 @@ rule "Recommend books with category that current user has bought and books have 
         $currentUser: User($cuid: username, $cage: age, $cgender: gender)
         
         Number(intValue > 2) from accumulate(
-            $e: BookMarkedEvent(userId == $currentUser.username, mark>=3.5),
+            $e: BookMarkedEvent(userId == $currentUser.userId, mark>=3.5),
             count($e)
         )
         

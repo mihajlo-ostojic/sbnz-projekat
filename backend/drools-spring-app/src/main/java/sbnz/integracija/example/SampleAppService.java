@@ -408,6 +408,7 @@ public class SampleAppService {
 	    
 	     Order ret = orderStore.addOrder(o);
     	System.out.println("Adding order in repo");
+    	kieSession.insert(ret);
         kieSession.insert(new OrderCreatedEvent(userId,ret));
         kieSession.fireAllRules();
         return ret;
