@@ -32,8 +32,10 @@ public class UserStore {
 	
 	public User getUser(String username) {
 		for (User user : this.allUsers) {
+//			System.out.println("u foru username: "+ user.getUsername());
 			if(user.getUsername().equals(username)==true)
 			{
+//				System.out.println("nadjen u foru");
 				return user;
 			}
 		}

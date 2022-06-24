@@ -1,0 +1,182 @@
+package sbnz.integracija;
+dialect  "mvel"
+
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Set;
+import java.util.HashSet;
+import java.util.stream.Collectors;
+import java.util.Collections;
+
+
+import sbnz.integracija.example.facts.User;
+import sbnz.integracija.example.facts.UserCategory;
+
+
+import sbnz.integracija.example.event.SuspiciousCustomerEvent;
+import sbnz.integracija.example.event.CancelOrderEvent;
+import sbnz.integracija.example.event.CommentApprovalEvent;
+import sbnz.integracija.example.event.BookMarkedEvent;
+import sbnz.integracija.example.event.ShareBookInfoEvent;
+import sbnz.integracija.example.event.OrderCreatedEvent;
+import sbnz.integracija.example.model.CommentStatus;
+import sbnz.integracija.example.model.Order;
+import sbnz.integracija.example.model.Author;
+import sbnz.integracija.example.model.CommentStatus;
+
+
+
+import sbnz.integracija.example.model.RecomendationsModule;
+
+
+import org.drools.core.spi.KnowledgeHelper;
+
+global sbnz.integracija.example.model.RecomendationsModule recomendationsModule;
+
+
+rule "Recommend books of an author with good marks by current user, books that are not bought by user"
+	salience 5
+    when
+        $currentUser: User($cuid: username)
+        $author: Author($aid: id)
+        
+        $authorBooksIds: List() from accumulate(
+            $book: Book($bid: bookId, authorId == $aid),
+            collectList($bid)
+        )
+        Number(intValue > 2) from accumulate(
+            $e: BookMarkedEvent(userId == $currentUser.userId, bookId memberOf $authorBooksIds, mark>=3.5),
+            count($e)
+        )
+
+        $authorBooksNotMarked : List() from accumulate(
+            $book: Book($bid: bookId) and
+            not BookMarkedEvent(bookId == $bid, userId == $currentUser.username),
+            collectList($book)
+        )
+    then
+    	System.out.println("RULE: recomendation 1");
+        Set recommended = new HashSet();
+        recommended.addAll(RecomendationsModule.getBestRecomendations($authorBooksNotMarked));
+        recomendationsModule.updateRecommendations($cuid, new ArrayList(recommended));
+end
+
+
+rule "Books are recomended because other users similar to current user bought them and curent user did not bought same books"
+	salience 4
+    when
+        $currentUser: User($cuid: username, $cage: age, $cgender: gender)
+        
+        $otherUser: User(username != $currentUser.username, $ouid: username, gender==$cgender, age-7<$cage || age+7>$cage )
+
+		Number(intValue > 2) from accumulate(
+            $e: BookMarkedEvent(userId == $currentUser.userId, getMark()>=3.5),
+            count($e)
+        )
+        
+        Number(intValue > 2) from accumulate(
+            $e: BookMarkedEvent(userId == $otherUser.userId, getMark()>=3.5),
+            count($e)
+        )
+        
+        $authorBooksToRecomend : List() from accumulate(
+            $book: Book($bid: bookId) and
+            not BookMarkedEvent(bookId == $bid, userId == $currentUser.userId) and BookMarkedEvent(bookId == $bid, userId == $otherUser.userId),
+            collectList($book)
+        )
+
+    then
+    	System.out.println("RULE: recomendation 2");
+        Set recommended = new HashSet();
+        recommended.addAll(RecomendationsModule.getBestRecomendations($authorBooksToRecomend));
+        recomendationsModule.updateRecommendations($cuid, new ArrayList(recommended));
+end
+
+
+rule "Recommend books with category that current user has not bought and books have good marks, so that there will be some randomness"
+    salience 3
+    when
+        $currentUser: User($cuid: username, $cage: age, $cgender: gender)
+        
+        Number(intValue > 2) from accumulate(
+            $e: BookMarkedEvent(userId == $currentUser.userId, mark>=3.5),
+            count($e)
+        )
+        
+        $booksCategoryUserMarked: List() from accumulate(
+            Book($bmId: bookId, $bcat: category) and BookMarkedEvent(bookId == $bmId, userId == $currentUser.userId),
+            collectList($bcat)
+        )
+        
+        $booksToRecomend : List() from accumulate(
+            $book: Book($bid: bookId,category not memberOf $booksCategoryUserMarked, getAverageMark()>=3.0),
+            collectList($book)
+        )
+        
+    then
+    	System.out.println("RULE: recomendation 3");
+        Set recommended = new HashSet();
+        recommended.addAll(RecomendationsModule.getBestRecomendations($booksToRecomend));
+        recomendationsModule.updateRecommendations($cuid, new ArrayList(recommended));
+end
+
+
+rule "Recommend books with category that current user has bought and books have good marks"
+    salience 2
+    when
+        $currentUser: User($cuid: username, $cage: age, $cgender: gender)
+        
+        Number(intValue > 2) from accumulate(
+            $e: BookMarkedEvent(userId == $currentUser.username, mark>=3.5),
+            count($e)
+        )
+        
+        $booksCategoryUserMarked: List() from accumulate(
+            Book($bmId: bookId, $bcat: category) and BookMarkedEvent(bookId == $bmId, userId == $currentUser.userId),
+            collectList($bcat)
+        )
+        
+        $booksToRecomend : List() from accumulate(
+            $book: Book($bid: bookId,category memberOf $booksCategoryUserMarked, getAverageMark()>=3.0),
+            collectList($book)
+        )
+        
+    then
+    	System.out.println("RULE: recomendation 4");
+        Set recommended = new HashSet();
+        recommended.addAll(RecomendationsModule.getBestRecomendations($booksToRecomend));
+        recomendationsModule.updateRecommendations($cuid, new ArrayList(recommended));
+end
+
+
+rule "Recommend books when user has not marked anything"
+	salience 1
+    when       
+        
+        $currentUser: User($cuid: username, $cage: age)
+        $author: Author($aid: id)
+        $authorBooksIds: List() from accumulate(
+            $book: Book($bid: bookId, authorId == $aid),
+            collectList($bid)
+        )
+        
+        $otherUser: User(username != $currentUser.username, $ouid: username)
+ 
+        Number(intValue > 1) from accumulate(
+            $e: BookMarkedEvent(userId == $otherUser.userId, mark>=3.5),
+            count($e)
+        )
+        
+        $booksToRecomend : List() from accumulate(
+            $book: Book($bid: bookId) and
+            BookMarkedEvent(bookId == $bid, userId == $otherUser.userId, mark>=3.0),
+            collectList($book)
+        )
+        
+    then
+    	System.out.println("RULE: recomendation 5");
+        Set recommended = new HashSet();
+        recommended.addAll(RecomendationsModule.getBestRecomendations($booksToRecomend));
+        recomendationsModule.updateRecommendations($cuid, new ArrayList(recommended));
+end
+

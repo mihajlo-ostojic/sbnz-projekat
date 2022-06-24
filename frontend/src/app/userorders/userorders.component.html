@@ -1,0 +1,21 @@
+<div>
+    <h1>All orders</h1>
+    <div>
+      <div *ngFor="let o of orders" style="display: block;border: solid 2px black;margin-bottom: 10px;color: forestgreen;">
+        <div style="display: inline-block; color: forestgreen;" >
+         <p>Order id: {{o.orderId}}</p>
+        </div>
+
+        <div *ngFor="let ol of o.orderLines" style="display: block;border: solid 2px black;margin-bottom: 10px; margin: 5px;">
+            <div style="display: inline-block; color: forestgreen;" >
+             <p>Order id: {{ol.book.bookId}}</p>
+             <p>Book name : {{ol.book.name}}</p>
+            </div>
+        </div>
+        <p>Delivery: {{o.delivery}}</p>
+        <p>Quantity : {{o.totalItems}}</p>
+
+        <button color="primary" type="submit" style="padding: 12px 32px; margin-right: 20px;" (click)="cancel(o.orderId)">Cancel order</button>
+
+    </div>
+</div>

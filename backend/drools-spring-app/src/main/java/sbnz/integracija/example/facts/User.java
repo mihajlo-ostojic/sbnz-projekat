@@ -13,6 +13,7 @@ public class User implements Serializable {
 	    public int userId;
 	    private Integer age;
 	    private String username;
+	    private String password;
 	    private String email;
 	    private Gender gender;
 	    private UserCategory category = UserCategory.NA;
@@ -150,10 +151,24 @@ public class User implements Serializable {
 	        }
 	        return true;
 	    }
+	    
+	    
 
-	    @Override
+	    public String getPassword() {
+			return password;
+		}
+
+
+
+		public void setPassword(String password) {
+			this.password = password;
+		}
+
+
+
+		@Override
 	    public String toString() {
-	        return "User{" + "id=" + userId + ", username=" + username + ", gender=" + gender
+	        return "User{" + "id=" + userId + ", username=" + username + ", password=" + password + ", gender=" + gender
 	                + ", age=" + age + ", points=" + points + ", email=" + email + ", member=" + member + ", category=" + category + '}';
 	    }
 	    

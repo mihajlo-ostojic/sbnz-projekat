@@ -1,5 +1,13 @@
 package sbnz.integracija;
 
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Set;
+import java.util.HashSet;
+import java.util.stream.Collectors;
+import java.util.Collections;
+
+
 import sbnz.integracija.example.facts.Item;
 import sbnz.integracija.example.facts.User;
 import sbnz.integracija.example.facts.UserCategory;
@@ -15,6 +23,14 @@ import sbnz.integracija.example.model.CommentStatus;
 import sbnz.integracija.example.model.Order;
 import sbnz.integracija.example.model.Book;
 import sbnz.integracija.example.model.CommentStatus;
+
+import sbnz.integracija.example.model.RecomendationsModule;
+
+
+import org.drools.core.spi.KnowledgeHelper;
+
+global sbnz.integracija.example.model.RecomendationsModule recomendationsModule;
+
 
 rule "Book is marked"
     no-loop
@@ -117,5 +133,21 @@ rule "Award points to user, for past sharing books and marking them"
     then
     	System.out.println("RULE: Award points to user, for past sharing books and marking them");
         modify($user) { addShared(50) }
+
+end
+
+rule "Recomend something "
+	no-loop
+    when
+        $user: User($cuid: userId)
+        accumulate(
+         	BookMarkedEvent($m: this, $user.userId != userId, mark >2) and
+         	Book($b: this,$id:bookId, getBookId() == $m.bookId),
+    
+         	$bmel: collectList($b)
+         )
+         eval($bmel.size() >= 2)
+    then
+    	System.out.println("RULE: recomend something");
 
 end

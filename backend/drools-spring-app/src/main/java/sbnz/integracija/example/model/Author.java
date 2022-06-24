@@ -27,6 +27,12 @@ public class Author {
 	public void setId(int id) {
 		this.id = id;
 	}
+	public Author(String firstName, String lastName, int id) {
+		super();
+		this.firstName = firstName;
+		this.lastName = lastName;
+		this.id = id;
+	}
 	
 	
 	

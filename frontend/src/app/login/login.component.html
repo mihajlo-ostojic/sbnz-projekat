@@ -1,0 +1,27 @@
+<div style="height: 100%; display: flex; justify-content: center;">
+
+    <div style="margin-top: 10%; width: 40%; height: 60%; display: flex; justify-content: center; align-items: center; height: max-content; padding-top: 20px; opacity: 85%;">
+            <form style="width: 80%;" novalidate>
+    
+                <div style="background-color: #424242;height: 35px; padding: 10px;padding-left: 100px;">
+                <div >
+                  
+                      <label style="padding-right: 10px;color: white;">Username</label>
+                      <input matInput  required id="usernameInput" style="height: 40%;"  name="c1" [(ngModel)] = "username"/>
+                  
+                </div>
+                <div >
+                    <div style="width:100%;">
+                        <label style="padding-right: 10px;color: white;">Password</label>
+                        <input matInput  required id="passwordInput" style="height: 40%;"  name="c2" [(ngModel)] = "password" type="password"/>
+                    </div>
+                </div>
+                </div>
+
+                <div style="text-align: center; margin-top: 20px;">
+                  <button id="loginButton"  color="primary" type="submit" style="padding: 12px 32px; margin-right: 20px;" (click)="login()">Log in</button>
+                </div>
+      
+            </form>
+        </div>
+</div>

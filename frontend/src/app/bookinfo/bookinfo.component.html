@@ -1,0 +1,67 @@
+<h2>Book info</h2>
+
+<div style="display: inline-block; color: forestgreen;" >
+    <p>Book name: {{book.book.name}}</p>
+    <p>Book description: {{book.book.description}}</p>
+    <p>Book category: {{book.book.category}}</p>
+    <p>Book averageMark: {{book.book.averageMark}}</p>
+    <p>Year of publication: {{book.book.yearOfPublication}}</p>
+    <p>Alphabet: {{book.book.alphabet}}</p>
+    <p>Binding type: {{book.book.bindingType}}</p>
+    <p>Cost: {{book.book.cost}}</p>
+    <!-- <button id="loginButton"  color="primary" type="submit" style="padding: 12px 32px; margin-right: 20px;">Details</button> -->
+</div>
+<hr>
+<h3>Share book on social media</h3>
+<button id="buy"  color="primary" type="submit" style="padding: 12px 32px; margin-right: 20px;" (click)="shareInfo()">Share</button>
+<hr>
+<h3>Book comments</h3>
+<div *ngFor="let comment of book.comments" style="display: block;border: solid 2px black;margin-bottom: 10px;">
+    <div style="display: inline-block; color: forestgreen;" >
+      <p>Coment user: {{comment.userId}}</p>
+      <p>Coment content: {{comment.content}}</p>
+    </div>
+</div>
+<hr>
+<h3>Buy</h3>
+<div style="display: block;border: solid 2px black;margin-bottom: 10px;">
+    <p>Input amount</p>
+    <input id="inputamount" style="height: 40%;"  name="c1" [(ngModel)] = "amount"/>
+    <br>
+    <br>
+    <p>Status</p>
+    <input
+     type="checkbox"
+    [checked]="status1"
+    (change)="status1 = !status1"/>
+    <br>
+    <br>
+    <button id="buy"  color="primary" type="submit" style="padding: 12px 32px; margin-right: 20px;" (click)="buy()">Buy</button>
+</div>
+<hr>
+<h3>Leave comment</h3>
+<div style="display: block;border: solid 2px black;margin-bottom: 10px;">
+    <p>Input comment</p>
+    <input id="inputcomment" style="height: 40%s;"  name="c1" [(ngModel)] = "comment"/>
+    <br>
+    <br>
+    <p>Status</p>
+    <input
+     type="checkbox"
+    [checked]="status2"
+    (change)="status2 = !status2"/>
+    <br>
+    <br>
+    <button id="buy"  color="primary" type="submit" style="padding: 12px 32px; margin-right: 20px;" (click)="addComment()">Comment</button>
+</div>
+<hr>
+<h3>Leave mark</h3>
+<div style="display: block;border: solid 2px black;margin-bottom: 10px;">
+    <p>Input mark</p>
+    <input id="inputcomment" style="height: 40%s;"  name="c1" [(ngModel)] = "mark"/>
+    <br>
+    <br>
+    <button id="buy"  color="primary" type="submit" style="padding: 12px 32px; margin-right: 20px;" (click)="addMark()">Mark</button>
+</div>
+<hr>
+

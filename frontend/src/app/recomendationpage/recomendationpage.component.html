@@ -1,0 +1,9 @@
+<div *ngFor="let book of dto" style="display: block;border: solid 2px black;margin-bottom: 10px;">
+    <div style="display: inline-block; color: forestgreen;" >
+      <p>Book name: {{book.name}}</p>
+      <p>Book description: {{book.description}}</p>
+      <p>Book category: {{book.category}}</p>
+      <p>Book averageMark: {{book.averageMark}}</p>
+      <button id="loginButton"  color="primary" type="submit" style="padding: 12px 32px; margin-right: 20px;" (click)="details(book.bookId)">Details</button>
+    </div>
+</div>

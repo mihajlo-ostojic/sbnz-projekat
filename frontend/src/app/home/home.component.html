@@ -1,0 +1,19 @@
+<div>
+  <button id="profile"  color="primary" type="submit" style="padding: 12px 32px; margin-right: 20px;" (click)="loadProfile()">Profile</button>
+  <button id="orders"  color="primary" type="submit" style="padding: 12px 32px; margin-right: 20px;" (click)="loadOrders()">My orders</button>
+  <button id="recomendations"  color="primary" type="submit" style="padding: 12px 32px; margin-right: 20px;" (click)="recomendations()">Recomendations</button>
+</div>
+<div>
+    <h1>All books</h1>
+    <div>
+      <div *ngFor="let book of allBooks" style="display: block;border: solid 2px black;margin-bottom: 10px;">
+        <div style="display: inline-block; color: forestgreen;" >
+          <p>Book name: {{book.name}}</p>
+          <p>Book description: {{book.description}}</p>
+          <p>Book category: {{book.category}}</p>
+          <p>Book averageMark: {{book.averageMark}}</p>
+          <button id="loginButton"  color="primary" type="submit" style="padding: 12px 32px; margin-right: 20px;" (click)="details(book.bookId)">Details</button>
+        </div>
+    </div>
+</div>
+  </div>

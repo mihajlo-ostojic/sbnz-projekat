@@ -1,6 +1,7 @@
 package sbnz.integracija.example;
 
 import java.util.Collection;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,6 +23,7 @@ import sbnz.integracija.example.model.Book;
 import sbnz.integracija.example.model.BookDto;
 import sbnz.integracija.example.model.Comment;
 import sbnz.integracija.example.model.NewCommentDto;
+import sbnz.integracija.example.model.Order;
 import sbnz.integracija.example.model.RecomendationsDTO;
 
 @RestController
@@ -48,6 +50,13 @@ public class SampleAppController {
 //		return i2;
 //	}
 	
+	@RequestMapping(value = "/login", method = RequestMethod.GET, produces = "application/json")
+	public ResponseEntity<User> getUserData(@RequestParam(required = true) String username, @RequestParam(required = true) String password) {
+		System.out.println("trazi " + username + " " + password);
+		User found = sampleService.login(username, password);
+		return ResponseEntity.ok(found);
+	}
+	
 	@GetMapping("/allbooks")
     public ResponseEntity<Collection<Book>> getAllBooks() {
         return ResponseEntity.ok(sampleService.getAllBooks());
@@ -55,8 +64,14 @@ public class SampleAppController {
 	
 	@RequestMapping(value = "/userdata", method = RequestMethod.GET, produces = "application/json")
 	public ResponseEntity<User> getUserData(@RequestParam(required = true) String username) {
-
+		System.out.println("trazi korisnice podatk");
 		return ResponseEntity.ok(sampleService.getUserData(username));
+	}
+	
+	@RequestMapping(value = "/userorders", method = RequestMethod.GET, produces = "application/json")
+	public ResponseEntity<List<Order>> getUserOrders(@RequestParam(required = true) int userId) {
+		System.out.println("trazi korisnice ordere");
+		return ResponseEntity.ok(sampleService.getUserOrders(userId));
 	}
 	
 	@RequestMapping(value = "/bookData", method = RequestMethod.GET, produces = "application/json")
@@ -70,12 +85,25 @@ public class SampleAppController {
 
     	return ResponseEntity.ok(sampleService.markBook(bookId, userId, mark));
 	}
+    
+    @RequestMapping(value = "/shareinfo", method = RequestMethod.GET, produces = "application/json")
+	public ResponseEntity<String> shareInfo(@RequestParam(required = true) int userId, @RequestParam(required = true) int bookId) {
+    	sampleService.shareInfo(bookId, userId);
+    	return ResponseEntity.ok("shared info");
+	}
 
     @RequestMapping(value = "/addComment", method = RequestMethod.GET, produces = "application/json")
 	public ResponseEntity<Comment> addComment(@RequestParam(required = true) int userId, @RequestParam(required = true) int bookId,
-			@RequestParam(required = true) String content,@RequestParam(required = true) boolean status) {
+			@RequestParam(required = true) String content,@RequestParam(required = true) boolean statuss) {
 
-    	return ResponseEntity.ok(sampleService.addNewComment(new NewCommentDto(bookId,userId,content,status)));
+    	return ResponseEntity.ok(sampleService.addNewComment(new NewCommentDto(bookId,userId,content,statuss)));
+	}
+    
+    @RequestMapping(value = "/addOrder", method = RequestMethod.GET, produces = "application/json")
+	public ResponseEntity<Order> addOrder(@RequestParam(required = true) int userId, @RequestParam(required = true) int bookId,
+			@RequestParam(required = true) int amount) {
+    	
+    	return ResponseEntity.ok(sampleService.addNewOrder(userId, bookId, amount));
 	}
     
     @RequestMapping(value = "/cancelorder", method = RequestMethod.GET, produces = "application/json")
@@ -83,11 +111,19 @@ public class SampleAppController {
     	sampleService.cancelOrder(userId, orderId);
     	return ResponseEntity.ok("Order canceled");
 	}
-
-    @GetMapping("/recomendations/{username}")
-    public ResponseEntity<RecomendationsDTO> getUserFeed(@PathVariable String username) {
-        return ResponseEntity.ok(sampleService.getRecomendations(username));
-    }
+    
+    @RequestMapping(value = "/approveorder", method = RequestMethod.GET, produces = "application/json")
+	public ResponseEntity<String> approveOrder(@RequestParam(required = true) int userId, @RequestParam(required = true) int orderId) {
+    	sampleService.approveOrder(userId, orderId);
+//    	sampleService.cancelOrder(userId, orderId);
+    	return ResponseEntity.ok("Order approve");
+	}
+    
+    @RequestMapping(value = "/recomendations", method = RequestMethod.GET, produces = "application/json")
+   	public ResponseEntity<RecomendationsDTO> getRecomendations(@RequestParam(required = true) String username) {
+      
+       	return ResponseEntity.ok(sampleService.getRecomendations(username));
+   	}
 	
 	
 	

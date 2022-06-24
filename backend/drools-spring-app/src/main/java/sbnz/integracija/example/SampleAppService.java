@@ -22,6 +22,7 @@ import sbnz.integracija.example.event.ShareBookInfoEvent;
 import sbnz.integracija.example.facts.Item;
 import sbnz.integracija.example.facts.User;
 import sbnz.integracija.example.facts.UserCategory;
+import sbnz.integracija.example.model.Author;
 import sbnz.integracija.example.model.Book;
 import sbnz.integracija.example.model.Book.BindingType;
 import sbnz.integracija.example.model.BookDto;
@@ -65,9 +66,12 @@ public class SampleAppService {
 		this.userStore = new UserStore();
 		this.orderStore = new OrderStore();
 		this.commentStore = new CommentStore();
+		this.recomendationsModule = new RecomendationsModule();
+		this.kieSession.setGlobal("recomendationsModule", this.recomendationsModule);
 		
 		initBooks();
 		initUsers();
+		initAuthors();
 		
 		 for (Book book : allInitBooks) {
 			bookStore.addBook(book);
@@ -329,6 +333,22 @@ public class SampleAppService {
         return userStore.getUser(username);
     }
     
+    public List<Order> getUserOrders(int userId) {
+        return orderStore.getOrdersByUser(userId);
+    }
+    
+    public User login(String username,String password) {
+        User found = userStore.getUser(username);
+        if(found!= null && found.getPassword().equals(password)) {
+        	System.out.println("nadjen korisnik za login");
+        	return found;
+        }
+        else {
+        	System.out.println("nije nadjen korisnik za login");
+        	return null;
+        }
+    }
+    
     public BookDto getBookData(int bookId) {
         Book book = bookStore.getBook(bookId);
         List<Comment> allComments = commentStore.getCommentsByBook(bookId);
@@ -343,14 +363,26 @@ public class SampleAppService {
         kieSession.fireAllRules();
         return bookStore.getBook(bookId);
     }
+    
+    public void shareInfo(int bookId, int userId) {
+    	System.out.println("Shared book in repo");
+        kieSession.insert(new ShareBookInfoEvent(userId, bookStore.getBook(bookId), LocalDate.now()));
+        kieSession.fireAllRules();
+    }
 
     public void cancelOrder(int userId, int orderId) {
+    	System.out.println("cancele order " + orderId);
         kieSession.insert(new CancelOrderEvent(userId, orderId));
         kieSession.fireAllRules();
     }
     
+    public void approveOrder(int userId, int orderId) {
+    	System.out.println("approve order " + orderId);
+        kieSession.fireAllRules();
+    }
+    
     public Comment addNewComment(NewCommentDto dto) {
-    	//TODO: add comments to books
+    	
     	Comment new1 = new Comment(1,dto.getBookId(),dto.getUserId(),dto.getContent());
     	Comment ret = commentStore.addComment(new1);
     	CommentStatus status = CommentStatus.REJECTED;
@@ -361,12 +393,31 @@ public class SampleAppService {
         kieSession.fireAllRules();
         return ret;
     }
+    
+    public Order addNewOrder(int userId, int bookId, int amount) {
+    	
+    	OrderLine orderLine1 = new OrderLine();
+	     orderLine1.setBook(bookStore.getBook(bookId));
+	     orderLine1.setQuantity(amount);
+	     Order o = new Order();
+	     List<OrderLine> l1 = new LinkedList<OrderLine>();
+	     l1.add(orderLine1);
+	     o.setItems(l1);
+	     o.setUserId(userId);
+	     o.setUser(userStore.getUser(userId));
+	    
+	     Order ret = orderStore.addOrder(o);
+    	System.out.println("Adding order in repo");
+        kieSession.insert(new OrderCreatedEvent(userId,ret));
+        kieSession.fireAllRules();
+        return ret;
+    }
 
 
     public RecomendationsDTO getRecomendations(String username) {
     	
-    	return null;
-//        return recomendationsModule.createFeedForUser(username, getAllSongs(), userRepo::getUser);
+    	RecomendationsDTO dto = new RecomendationsDTO(this.recomendationsModule.getRecomendation(username));
+    	return dto;
     }
 	
 	
@@ -471,6 +522,7 @@ public class SampleAppService {
 	     u1.setCategory(UserCategory.NA);
 	     u1.setUserId(1);
 	     u1.setUsername("pera");
+	     u1.setPassword("pera");
 	     u1.setGender(Gender.MALE);
 	     u1.setEmail("pera@gmail.com");
 	     u1.setPoints(0);
@@ -480,6 +532,7 @@ public class SampleAppService {
 	     u2.setCategory(UserCategory.NA);
 	     u2.setUserId(2);
 	     u2.setUsername("marko");
+	     u2.setPassword("marko");
 	     u2.setGender(Gender.MALE);
 	     u2.setEmail("marko@gmail.com");
 	     u2.setPoints(1500);
@@ -490,6 +543,7 @@ public class SampleAppService {
 	     u3.setCategory(UserCategory.BRONZE);
 	     u3.setUserId(3);
 	     u3.setUsername("joka");
+	     u3.setPassword("joka");
 	     u3.setGender(Gender.FEMALE);
 	     u3.setEmail("joka@gmail.com");
 	     u3.setPoints(3000);
@@ -500,16 +554,44 @@ public class SampleAppService {
 	     u4.setCategory(UserCategory.SILVER);
 	     u4.setUserId(4);
 	     u4.setUsername("jelena");
+	     u4.setPassword("jelena");
 	     u4.setGender(Gender.FEMALE);
 	     u4.setEmail("jelena@gmail.com");
 	     u4.setPoints(5500);
+	     
+	     User u5 = new User();
+	     u5.setAge(24);
+	     u5.setCategory(UserCategory.SILVER);
+	     u5.setUserId(4);
+	     u5.setUsername("test");
+	     u5.setPassword("test");
+	     u5.setGender(Gender.MALE);
+	     u5.setEmail("test@gmail.com");
+	     u5.setPoints(10000);
 	     
 	     allInitUsers = new ArrayList<User>();
 	     allInitUsers.add(u1);
 	     allInitUsers.add(u2);
 	     allInitUsers.add(u3);
 	     allInitUsers.add(u4);
+	     allInitUsers.add(u5);
 		 
+	 }
+	 
+	 private void initAuthors() {
+		 
+		 Author a1 = new Author("Herman","Hese",1);
+		 Author a2 = new Author("Artur","Sopenhauer",2);
+		 Author a3 = new Author("Freenk","Herbert",3);
+		 Author a4 = new Author("Freenk","Herbert",4);
+		 Author a5 = new Author("Autor","Autor",5);
+
+		 this.kieSession.insert(a1);
+		 this.kieSession.insert(a2);
+		 this.kieSession.insert(a3);
+		 this.kieSession.insert(a4);
+		 this.kieSession.insert(a5);
+		 this.kieSession.fireAllRules();
 	 }
 	 
 	 

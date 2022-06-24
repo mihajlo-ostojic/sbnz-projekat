@@ -22,11 +22,12 @@ public class OrderStore {
 		this.lastId = 0;
 	}
 	
-	public void addOrder(Order newOrder) {
+	public Order addOrder(Order newOrder) {
 		this.lastId++;
 		newOrder.setOrderId(this.lastId);
 		
 		allOrders.add(newOrder);
+		return newOrder;
 	}
 	
 	public Order getOrder(int id) {
@@ -41,8 +42,10 @@ public class OrderStore {
 	
 	public List<Order> getOrdersByUser(int userId)
 	{
+		System.out.println("Id korisnika: " + userId);
 		List<Order> allFound = new ArrayList<Order>();
-		for (Order o : allFound) {
+		for (Order o : this.allOrders) {
+			System.out.println("order id koji se poredi: " + o.getUserId());
 			if(o.getUserId() == userId)
 			{
 				allFound.add(o);
